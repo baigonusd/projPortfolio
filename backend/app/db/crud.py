@@ -49,6 +49,29 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.refresh(db_user)
     return db_user
 
+def update_user(db: Session, user: schemas.UserCreate, user_id: int):
+    existing_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not existing_user:
+        return {"message": f"No Details found for User ID {user_id}"}
+    email = user.email
+    fake_hashed_password = Hasher.get_hash_password(f"{user.password}")
+    # existing_user = models.User(email=user.email, hashed_password=fake_hashed_password)
+    existing_user.email = email
+    existing_user.hashed_password = fake_hashed_password
+    db.add(existing_user)
+    db.commit()
+    db.refresh(existing_user)
+    # existing_user.update(jsonable_encoder(user))  
+    return user
+
+def delete_user(db: Session, user_id):
+    existing_user = db.query(models.User).filter(models.User.id == user_id)
+    if not existing_user.first():
+        return {"message": f"No Details found for User ID {user_id}"}
+    existing_user.delete()
+    db.commit()
+    return {"message": f"User id {user_id} has been succesfully deleted"}
+
 
 def get_items(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Item).offset(skip).limit(limit).all()
@@ -69,3 +92,29 @@ def update_item(db: Session, item: schemas.ItemBase, item_id: int, owner_id: int
         existing_item.update(jsonable_encoder(item))
         db.commit()
     return item
+
+def delete_item(db: Session, item_id: int):
+    existing_item = db.query(models.Item).filter(models.Item.id == item_id)
+    if not existing_item.first():
+        return {"message": f"No Details found for Item ID {item_id}"}
+    existing_item.delete()
+    db.commit()
+    return {"message": f"Item id {item_id} has been succesfully deleted"}
+
+def delete_all_items_by_user_id(db: Session, user_id: int):
+    existing_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not existing_user:
+        return {"message": f"No Details found for User ID {user_id}"}
+    # existing_user = models.User(email=user.email, hashed_password=fake_hashed_password)
+    existing_user.items = []
+    db.add(existing_user)
+    db.commit()
+    db.refresh(existing_user)
+    # existing_user.update(jsonable_encoder(user))  
+    return {"DELETED"}
+
+
+def get_item(db: Session, item_id: int):
+    return db.query(models.Item).filter(models.Item.id == item_id).first()
+
+

@@ -3,7 +3,7 @@ from fastapi import Depends, APIRouter, HTTPException
 import db.crud as crud
 import schemas.schemas as schemas
 from sqlalchemy.orm import Session
-from db.database import get_db
+from db.database import SessionLocal, get_db
 from fastapi.encoders import jsonable_encoder
 from models.models import Item
 
@@ -29,12 +29,26 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
 
+# READ ITEM
+
+@router.get("/item/{id}", response_model=schemas.Item, tags=["Items"])
+def read_item_by_id(item_id: int, db: Session = Depends(get_db)):
+    db_item = crud.get_item(db, item_id=item_id)
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return db_item
 
 # UPDATE ITEM
 
 @router.put("/item/update/{id}", tags=["Items"])
-def update_item(item_id: int, owner_id: int, item: schemas.ItemBase, db: Session = Depends(get_db)):
+def update_item_by_id(item_id: int, owner_id: int, item: schemas.ItemBase, db: Session = Depends(get_db)):
     item_to_update = crud.update_item(db, item, item_id=item_id, owner_id=owner_id)
-    if item_to_update is None:
-        raise HTTPException(status_code=404, detail="Item or owner not found")
     return item_to_update
+
+
+# DELETE ITEM
+
+@router.delete("/item/delete/{id}", tags=["Items"])
+def delete_item_by_id(item_id: int, db: Session = Depends(get_db)):
+    deleted_item = crud.delete_item(db, item_id=item_id)
+    return deleted_item

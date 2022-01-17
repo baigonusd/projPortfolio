@@ -1,3 +1,4 @@
+from re import L
 from typing import List
 from fastapi import Depends, APIRouter, HTTPException
 import db.crud as crud
@@ -38,3 +39,19 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+
+# USER_UPDATE
+
+@ router.put("/user/update/{id}", tags=["Users"])
+def update_user_by_id(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
+    user_update = crud.update_user(db, user, user_id=user_id)
+    return user_update
+
+# USER_DELETE
+
+@router.delete("/user/delete/{id}", tags=["Users"])
+def delete_user_by_id(user_id: int, db: Session = Depends(get_db)):
+    deleted_user = crud.delete_all_items_by_user_id(db, user_id)
+    deleted_user = crud.delete_user(db, user_id)
+    return deleted_user
