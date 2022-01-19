@@ -1,10 +1,11 @@
-from passlib import context
-from passlib.utils.decor import deprecated_function
 from sqlalchemy.orm import Session
 import models.models as models
 import schemas.schemas as schemas
 from passlib.context import CryptContext
 from fastapi.encoders import jsonable_encoder
+from jose import jwt
+from config import settings
+from fastapi import HTTPException, status
 
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
@@ -117,4 +118,15 @@ def delete_all_items_by_user_id(db: Session, user_id: int):
 def get_item(db: Session, item_id: int):
     return db.query(models.Item).filter(models.Item.id == item_id).first()
 
-
+def get_user_from_token(db, token):
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=settings.ALGORITHM)
+        username = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unable to verify credentials")
+        user = db.query(models.User).filter(models.User.email==username).first()
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unable to verify credentials")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unable to verify credentials")
+    return user

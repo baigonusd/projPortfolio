@@ -8,3 +8,4 @@
 /backend/app/tests/__pycache__
 /backend/app/tests/.pytest_cache
 /backend/app/tests/test.db
+/backend/app/tests/check.py
