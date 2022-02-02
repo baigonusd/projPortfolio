@@ -26,7 +26,10 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    repeat_password: str
 
+class UserUpdate(UserCreate):
+    old_password: str
 
 class User(UserBase):
     id: int

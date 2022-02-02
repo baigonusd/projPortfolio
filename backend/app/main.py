@@ -5,6 +5,8 @@ from config import settings
 from models.models import Order
 # from celery_worker import create_order
 from routers import users, items, login
+from webapps.routers import items as web_items
+from fastapi.staticfiles import StaticFiles
 
 # Alembic
 # Base.metadata.create_all(bind=engine)
@@ -16,11 +18,14 @@ app = FastAPI(
     openapi_tags=settings.TAGS
 )
 
+StaticFiles(directory="static")
+
 # Dependency in db.database
 
 app.include_router(users.router)
 app.include_router(items.router)
 app.include_router(login.router)
+app.include_router(web_items.router)
 
 
 # @app.post('/order')

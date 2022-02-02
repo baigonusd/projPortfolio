@@ -14,6 +14,9 @@ router = APIRouter()
 @router.post("/users/", response_model=schemas.User, tags=["Users"])
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, email=user.email)
+    check_user = crud.check_user(user)
+    if check_user is False:
+        raise HTTPException(status_code=400, detail="Passwords don't match")
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db=db, user=user)
@@ -44,14 +47,19 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 # USER_UPDATE
 
 @ router.put("/user/update/{id}", tags=["Users"])
-def update_user_by_id(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
+def update_user_by_id(user_id: int, user: schemas.UserUpdate, db: Session = Depends(get_db)):
     user_update = crud.update_user(db, user, user_id=user_id)
+    if user_update is False:
+        raise HTTPException(status_code=400, detail="Old password doesn't match")
+    check_user = crud.check_user(user)
+    if check_user is False:
+        raise HTTPException(status_code=400, detail="Passwords don't match")
     return user_update
 
 # USER_DELETE
 
 @router.delete("/user/delete/{id}", tags=["Users"])
 def delete_user_by_id(user_id: int, db: Session = Depends(get_db)):
-    deleted_user = crud.delete_all_items_by_user_id(db, user_id)
+    crud.delete_all_items_by_user_id(db, user_id)
     deleted_user = crud.delete_user(db, user_id)
     return deleted_user
